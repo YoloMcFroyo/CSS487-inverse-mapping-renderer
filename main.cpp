@@ -10,6 +10,8 @@ typedef vector<vector<double>> Matrix;
 Matrix invertMatrix(Matrix inputMatrix);
 Point multiplyMatrixAndPoint(Matrix inputMatrix, Point point);
 Matrix multiplyMatrixAndMatrix(Matrix matrix1, Matrix matrix2);
+Point subtractPoints(Point point1, Point point2);
+Point addPoints(Point point1, Point point2);
 
 int main(int argc, char *argv[])
 {
@@ -48,21 +50,46 @@ int main(int argc, char *argv[])
     double pi = std::acos(-1.0);
     double radians = theta_degrees * (pi / 180.0);
 
+    // Define the transformation matrices
     Matrix scaleMatrix = {{s_x, 0}, {0, s_y}};
     Point translationMatrix = {t_x, t_y};
-    Matrix rotation = { {cos(radians), -sin(radians)}, {sin(radians), cos(radians)} };
-    Matrix shearMatrix = { {1, k}, {0, 1} };
+    Matrix rotation = {{cos(radians), -sin(radians)}, {sin(radians), cos(radians)}};
+    Matrix shearMatrix = {{1, k}, {0, 1}};
+    Point center = {centerX, centerY};
 
-    // Combine the transformations into a single matrix
-    Matrix transformationMatrix = multiplyMatrixAndMatrix(shearMatrix, multiplyMatrixAndMatrix(rotation, scaleMatrix));
+    // Create the combined inverse transformation matrix
+    Matrix invertedScaleMatrix = invertMatrix(scaleMatrix);
+    Matrix invertedRotation = invertMatrix(rotation);
+    Matrix invertedShearMatrix = invertMatrix(shearMatrix);
 
+    // R^1 * K^-1 * S^-1
+    Matrix k_inv_s_inv = multiplyMatrixAndMatrix(invertedShearMatrix, invertedScaleMatrix);
+    Matrix transformationMatrix = multiplyMatrixAndMatrix(invertedRotation, k_inv_s_inv);
 
+    // Fill all pixels in the blank image
+    for (int i = 0; i < outputImage.getRows(); i++)
+    {
+        for (int j = 0; j < outputImage.getCols(); j++)
+        {
+            Point currentPixel = {(double)j, (double)i};
+
+            // (q - t - c)
+            Point shiftedByTranslation = subtractPoints(currentPixel, translationMatrix);
+            Point shiftedToOrigin = subtractPoints(shiftedByTranslation, center);
+
+            // M^-1 * (q - t - c)
+            Point transformedPoint = multiplyMatrixAndPoint(transformationMatrix, shiftedToOrigin);
+
+            // M^-1 * (q - t - c) + c
+            transformedPoint = addPoints(transformedPoint, center);
+        }
+    }
 
     return 0;
 }
 
 /**
- * @param takes a 2d matrix
+ * @param inputMatrix a 2x2 matrix
  * @returns inverted input matrix
  *
  * Precondition: inputMatrix is a 2x2 matrix with non-zero determinant
@@ -87,7 +114,8 @@ Matrix invertMatrix(Matrix inputMatrix)
 }
 
 /**
- * @param takes a 2x2 matrix and a 2D point
+ * @param inputMatrix a 2x2 matrix
+ * @param point a 2D point represented as a vector of doubles
  * @returns the result of multiplying the matrix by the point
  *
  * Precondition: inputMatrix is a 2x2 matrix and point is a 2D point
@@ -111,7 +139,7 @@ Point multiplyMatrixAndPoint(Matrix inputMatrix, Point point)
 
 // Write a method to multiply two 2D matrices to get a new 2D matrix
 /**
- * @param takes two 2x2 matrices
+ * @param matrix1, matrix2 two 2x2 matrices
  * @returns the result of multiplying the two matrices
  *
  * Precondition: inputMatrix1 and inputMatrix2 are 2x2 matrices
@@ -136,4 +164,23 @@ Matrix multiplyMatrixAndMatrix(Matrix matrix1, Matrix matrix2)
     outputMatrix[1][1] = c * f + d * h;
 
     return outputMatrix;
+}
+
+/**
+ * @param point1 The first point as a vector of doubles.
+ * @param point2 The second point as a vector of doubles.
+ * @return A new point representing subtracting point2 from point1.
+ */
+Point subtractPoints(Point point1, Point point2)
+{
+    return {point1[0] - point2[0], point1[1] - point2[1]};
+}
+
+/**
+ * @param point1, point2 two 2D points represented as vectors of doubles
+ * @returns the result of adding the two points
+ */
+Point addPoints(Point point1, Point point2)
+{
+    return {point1[0] + point2[0], point1[1] + point2[1]};
 }
