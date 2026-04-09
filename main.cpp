@@ -82,6 +82,56 @@ int main(int argc, char *argv[])
 
             // M^-1 * (q - t - c) + c
             transformedPoint = addPoints(transformedPoint, center);
+
+            double sourcePixelX = transformedPoint[0];
+            double sourcePixelY = transformedPoint[1];
+
+            // Check for out of bounds of input image
+            if (sourcePixelX < 0 || sourcePixelX >= inputImage.getCols() || sourcePixelY < 0 || sourcePixelY >= inputImage.getRows())
+            {
+                outputImage.setPixel(i, j, 0, 0, 0);
+            }
+            else
+            {
+                // Perform bilinear interpolation
+                double c = floor(sourcePixelX);
+                double r = floor(sourcePixelY);
+
+                Point top_left = {c, r};
+                Point top_right = {c + 1, r};
+                Point bottom_left = {c, r + 1};
+                Point bottom_right = {c + 1, r + 1};
+
+                double alpha = sourcePixelX - c;
+                double beta = sourcePixelY - r;
+
+                pixel topLeft = inputImage.getPixel(r, c);
+                pixel topRight = inputImage.getPixel(r, c + 1);
+                pixel bottomLeft = inputImage.getPixel(r + 1, c);   
+                pixel bottomRight = inputImage.getPixel(r + 1, c + 1);
+
+                double finalRed = (1 - alpha) * (1 - beta) * topLeft.red 
+                                + alpha * (1 - beta) * topRight.red 
+                                + (1 - alpha) * beta * bottomLeft.red 
+                                + alpha * beta * bottomRight.red;
+
+                double finalGreen = (1 - alpha) * (1 - beta) * topLeft.green 
+                                + alpha * (1 - beta) * topRight.green 
+                                + (1 - alpha) * beta * bottomLeft.green 
+                                + alpha * beta * bottomRight.green;
+
+                double finalBlue = (1 - alpha) * (1 - beta) * topLeft.blue 
+                                + alpha * (1 - beta) * topRight.blue 
+                                + (1 - alpha) * beta * bottomLeft.blue 
+                                + alpha * beta * bottomRight.blue;
+
+                byte finalR = static_cast<byte>(finalRed);
+                byte finalG = static_cast<byte>(finalGreen);
+                byte finalB = static_cast<byte>(finalBlue);
+
+                pixel blendedPixel = {finalR, finalG, finalB}; 
+                outputImage.setPixel(i, j, blendedPixel);
+            }
         }
     }
 
