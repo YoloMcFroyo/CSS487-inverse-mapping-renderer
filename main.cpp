@@ -87,12 +87,10 @@ int main(int argc, char *argv[])
             double sourcePixelX = transformedPoint[0];
             double sourcePixelY = transformedPoint[1];
 
-            // Check for out of bounds of input image
-            if (sourcePixelX < 0 || sourcePixelX >= (inputImage.getCols() - 1) || 
+            if (sourcePixelX < 0 || sourcePixelX >= (inputImage.getCols() - 1) ||
                 sourcePixelY < 0 || sourcePixelY >= (inputImage.getRows() - 1))
             {
-                pixel blackPixel = {0, 0, 0};
-                outputImage.setPixel(i, j, blackPixel);
+                outputImage.setPixel(i, j, 0, 0, 0);
             }
             else
             {
@@ -119,12 +117,11 @@ int main(int argc, char *argv[])
 
                 double finalBlue = (1 - alpha) * (1 - beta) * topLeft.blue + alpha * (1 - beta) * topRight.blue + (1 - alpha) * beta * bottomLeft.blue + alpha * beta * bottomRight.blue;
 
-                ::byte finalR = static_cast<::byte>(finalRed);
-                ::byte finalG = static_cast<::byte>(finalGreen);
-                ::byte finalB = static_cast<::byte>(finalBlue);
+                unsigned char finalR = static_cast<unsigned char>(finalRed);
+                unsigned char finalG = static_cast<unsigned char>(finalGreen);
+                unsigned char finalB = static_cast<unsigned char>(finalBlue);
 
-                pixel blendedPixel = {finalR, finalG, finalB};
-                outputImage.setPixel(i, j, blendedPixel);
+                outputImage.setPixel(i, j, finalR, finalG, finalB);
             }
         }
     }
