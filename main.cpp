@@ -1,6 +1,7 @@
 #include "Image.h"
 #include <iostream>
 #include <vector>
+#include <cmath>
 
 using namespace std;
 
@@ -87,9 +88,11 @@ int main(int argc, char *argv[])
             double sourcePixelY = transformedPoint[1];
 
             // Check for out of bounds of input image
-            if (sourcePixelX < 0 || sourcePixelX >= inputImage.getCols() || sourcePixelY < 0 || sourcePixelY >= inputImage.getRows())
+            if (sourcePixelX < 0 || sourcePixelX >= (inputImage.getCols() - 1) || 
+                sourcePixelY < 0 || sourcePixelY >= (inputImage.getRows() - 1))
             {
-                outputImage.setPixel(i, j, 0, 0, 0);
+                pixel blackPixel = {0, 0, 0};
+                outputImage.setPixel(i, j, blackPixel);
             }
             else
             {
@@ -107,33 +110,25 @@ int main(int argc, char *argv[])
 
                 pixel topLeft = inputImage.getPixel(r, c);
                 pixel topRight = inputImage.getPixel(r, c + 1);
-                pixel bottomLeft = inputImage.getPixel(r + 1, c);   
+                pixel bottomLeft = inputImage.getPixel(r + 1, c);
                 pixel bottomRight = inputImage.getPixel(r + 1, c + 1);
 
-                double finalRed = (1 - alpha) * (1 - beta) * topLeft.red 
-                                + alpha * (1 - beta) * topRight.red 
-                                + (1 - alpha) * beta * bottomLeft.red 
-                                + alpha * beta * bottomRight.red;
+                double finalRed = (1 - alpha) * (1 - beta) * topLeft.red + alpha * (1 - beta) * topRight.red + (1 - alpha) * beta * bottomLeft.red + alpha * beta * bottomRight.red;
 
-                double finalGreen = (1 - alpha) * (1 - beta) * topLeft.green 
-                                + alpha * (1 - beta) * topRight.green 
-                                + (1 - alpha) * beta * bottomLeft.green 
-                                + alpha * beta * bottomRight.green;
+                double finalGreen = (1 - alpha) * (1 - beta) * topLeft.green + alpha * (1 - beta) * topRight.green + (1 - alpha) * beta * bottomLeft.green + alpha * beta * bottomRight.green;
 
-                double finalBlue = (1 - alpha) * (1 - beta) * topLeft.blue 
-                                + alpha * (1 - beta) * topRight.blue 
-                                + (1 - alpha) * beta * bottomLeft.blue 
-                                + alpha * beta * bottomRight.blue;
+                double finalBlue = (1 - alpha) * (1 - beta) * topLeft.blue + alpha * (1 - beta) * topRight.blue + (1 - alpha) * beta * bottomLeft.blue + alpha * beta * bottomRight.blue;
 
-                byte finalR = static_cast<byte>(finalRed);
-                byte finalG = static_cast<byte>(finalGreen);
-                byte finalB = static_cast<byte>(finalBlue);
+                ::byte finalR = static_cast<::byte>(finalRed);
+                ::byte finalG = static_cast<::byte>(finalGreen);
+                ::byte finalB = static_cast<::byte>(finalBlue);
 
-                pixel blendedPixel = {finalR, finalG, finalB}; 
+                pixel blendedPixel = {finalR, finalG, finalB};
                 outputImage.setPixel(i, j, blendedPixel);
             }
         }
     }
+    outputImage.writeImage("output.gif");
 
     return 0;
 }
